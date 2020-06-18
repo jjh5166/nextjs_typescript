@@ -207,7 +207,7 @@ function createApolloClient(initialState = {}, serverAccessToken?: string) {
     return {
       headers: {
         ...headers,
-        authorization: token ? `bearer ${token}` : ""
+        cookie: token ? `qid${token}` : ""
       }
     };
   });

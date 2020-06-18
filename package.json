@@ -10,15 +10,19 @@
   },
   "dependencies": {
     "@apollo/react-ssr": "^3.1.5",
+    "apollo-boost": "^0.4.9",
     "apollo-cache-inmemory": "^1.6.6",
     "apollo-client": "^2.6.10",
     "apollo-link-context": "^1.0.20",
     "apollo-link-error": "^1.1.13",
     "apollo-link-http": "^1.5.17",
     "apollo-link-token-refresh": "^0.3.1",
+    "cookie": "^0.4.1",
     "isomorphic-unfetch": "^3.0.0",
+    "jwt-decode": "^2.2.0",
     "next": "latest",
     "react": "^16.12.0",
+    "react-apollo": "^3.1.5",
     "react-dom": "^16.12.0"
   },
   "devDependencies": {
