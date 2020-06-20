@@ -19,6 +19,7 @@
     "apollo-link-http": "^1.5.17",
     "apollo-link-token-refresh": "^0.3.1",
     "cookie": "^0.4.1",
+    "formik": "^2.1.4",
     "isomorphic-unfetch": "^3.0.0",
     "jwt-decode": "^2.2.0",
     "next": "latest",
