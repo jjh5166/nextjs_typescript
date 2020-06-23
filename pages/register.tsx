@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import { Formik, Field } from 'formik'
 import { InputField } from '../components/fields/inputField'
 import { RegisterComponent } from '../generated/apolloComponents'
+import Router from 'next/router'
 
 export default () => {
   return (
@@ -10,9 +11,9 @@ export default () => {
       <RegisterComponent>
         {(register) => (
           <Formik
-            // validationOnBlur={false} Formik options
-            // validationOnChange={false}
-            onSubmit={async (data, {setErrors}) => {
+            // validateOnBlur={false} Formik options
+            // validateOnChange={false}
+            onSubmit={async (data, { setErrors }) => {
               try {
                 const response = await register({
                   variables: {
@@ -20,8 +21,9 @@ export default () => {
                   }
                 })
                 console.log(response)
+                Router.push("/check-email")
               } catch (err) {
-                const errors: {[key: string]: string} = {};
+                const errors: { [key: string]: string } = {};
                 err.graphQLErrors[0].extensions.exception.validationErrors.forEach(
                   (validationErr: any) => {
                     Object.values(validationErr.constraints).forEach(
