@@ -11,9 +11,11 @@ import { getAccessToken, setAccessToken } from "./accessToken";
 import { onError } from "apollo-link-error";
 import { ApolloLink } from "apollo-link";
 import cookie from "cookie";
+import redirect from "./redirect";
+import Router from "next/router";
 
 const isServer = () => typeof window === "undefined";
-
+const isBrowser: boolean = (process as any).browser;
 /**
  * Creates and provides the apolloContext
  * to a next.js PageTree. Use it by wrapping
@@ -33,7 +35,7 @@ export function withApollo(PageComponent: any, { ssr = true } = {}) {
       setAccessToken(serverAccessToken);
     }
     const client = apolloClient || initApolloClient(apolloState);
-    return <PageComponent { ...pageProps } apolloClient = { client } />;
+    return <PageComponent {...pageProps} apolloClient={client} />;
   };
 
   if (process.env.NODE_ENV !== "production") {
@@ -100,37 +102,41 @@ export function withApollo(PageComponent: any, { ssr = true } = {}) {
             await getDataFromTree(
               <AppTree
                 pageProps={{
-              ...pageProps,
-              apolloClient
-            }}
-                apolloClient = { apolloClient }
-            />
+                  ...pageProps,
+                  apolloClient
+                }}
+                apolloClient={apolloClient}
+              />
             );
-        } catch (error) {
-          // Prevent Apollo Client GraphQL errors from crashing SSR.
-          // Handle them in components via the data.error prop:
-          // https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-query-data-error
-          console.error("Error while running `getDataFromTree`", error);
+          } catch (error) {
+            // server side catch error
+            // Prevent Apollo Client GraphQL errors from crashing SSR.
+            // Handle them in components via the data.error prop:
+            // https://www.apollographql.com/docs/react/api/react-apollo.html#graphql-query-data-error
+            console.error("Error while running `getDataFromTree`", error);
+            if (error.message.includes('not authenticated')) {
+              redirect(ctx.ctx, "/login")
+            }
+          }
         }
+
+        // getDataFromTree does not call componentWillUnmount
+        // head side effect therefore need to be cleared manually
+        Head.rewind();
       }
 
-      // getDataFromTree does not call componentWillUnmount
-      // head side effect therefore need to be cleared manually
-      Head.rewind();
-    }
+      // Extract query data from the Apollo store
+      const apolloState = apolloClient.cache.extract();
 
-    // Extract query data from the Apollo store
-    const apolloState = apolloClient.cache.extract();
-
-    return {
-      ...pageProps,
-      apolloState,
-      serverAccessToken
+      return {
+        ...pageProps,
+        apolloState,
+        serverAccessToken
+      };
     };
-  };
-}
+  }
 
-return WithApollo;
+  return WithApollo;
 }
 
 let apolloClient: ApolloClient<NormalizedCacheObject> | null = null;
@@ -213,8 +219,19 @@ function createApolloClient(initialState = {}, serverAccessToken?: string) {
   });
 
   const errorLink = onError(({ graphQLErrors, networkError }) => {
-    console.log(graphQLErrors);
-    console.log(networkError);
+    if (graphQLErrors)
+      graphQLErrors.forEach(({ message, locations, path }) => {
+        console.log(
+          `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+        );
+        if (isBrowser && message.includes("not authenticated")) {
+          Router.replace("/login");
+        }
+      }
+      );
+
+    if (networkError) console.log(`[Network error]: ${networkError}`);
+
   });
 
   return new ApolloClient({
