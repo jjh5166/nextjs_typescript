@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react'
 import Link from 'next/link'
 import Head from 'next/head'
+import { MeComponent } from '../generated/apolloComponents'
 
 type Props = {
   children?: ReactNode
@@ -32,14 +33,21 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => (
           <a>Login</a>
         </Link>
         |{' '}
-        <Link href="/logout">
-          <a>Logout</a>
-        </Link>
-        |{' '}
         <Link href="/forgot-password">
           <a>Forgot Password</a>
         </Link>{' '}
-        | <a href="/api/users">Users API</a>
+        <MeComponent>
+          {({ data, loading }) => {
+            if (!data || loading || !data.me) {
+              return null
+            }
+            return (
+              <Link href="/logout">
+                <a>Logout</a>
+              </Link>
+            )
+          }}
+        </MeComponent>
       </nav>
     </header>
     {children}
